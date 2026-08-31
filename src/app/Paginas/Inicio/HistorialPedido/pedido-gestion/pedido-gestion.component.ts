@@ -562,8 +562,29 @@ export class PedidoGestionComponent {
 
     this.HistorialPedidoServicio.ListadoTipoProducto()
       .subscribe((res: any) => {
-
         this.TiposProducto = res.data;
+
+
+
+      const tipoFisico = this.TiposProducto.find(
+        tp => tp.NombreTipoProducto?.trim().toUpperCase() === 'FISICO'
+      );
+
+      if (tipoFisico) {
+        this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
+        this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
+        this.MostrarListas['TipoProducto'] = false;
+
+        this.HistorialPedidoServicio
+          .ListadoProducto(tipoFisico.CodigoTipoProducto)
+          .subscribe((res: any) => {
+            this.Productos = res.data;
+            this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
+            this.ProductoTemp.NombreTipoProducto = tipoFisico.NombreTipoProducto;
+            this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
+          });
+      }
+
 
         if (this.TiposProducto?.length === 1) {
 

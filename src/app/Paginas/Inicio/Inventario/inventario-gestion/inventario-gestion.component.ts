@@ -190,7 +190,7 @@ export class InventarioGestionComponent {
     );
   }
   Seleccionar(
-    tipo: 'TipoProducto' | 'Marca' | 'Estilo' | 'Talla' | 'Color',
+    tipo: 'TipoProducto' | 'Marca' | 'Medida' | 'Ubicacion' | 'Color',
     item: any
   ) {
 
@@ -204,7 +204,7 @@ export class InventarioGestionComponent {
 
     const [codigo, nombre] = mapa[tipo];
 
-    const campoInventario = tipo === 'Estilo' ? 'Diseño' : tipo;
+    const campoInventario = tipo === 'Medida' ? 'Diseño' : tipo;
 
     this.Inventario[campoInventario] = Number(item[codigo] || 0);
 
@@ -401,10 +401,10 @@ export class InventarioGestionComponent {
     if (this.PanelCatalogoActivo === 'Marca')
       return item.NombreMarca;
 
-    if (this.PanelCatalogoActivo === 'Estilo')
+    if (this.PanelCatalogoActivo === 'Medida')
       return item.NombreEstilo;
 
-    if (this.PanelCatalogoActivo === 'Talla')
+    if (this.PanelCatalogoActivo === 'Ubicacion')
       return item.NombreTalla;
 
     if (this.PanelCatalogoActivo === 'Color')
@@ -425,11 +425,11 @@ export class InventarioGestionComponent {
         servicio = this.InventarioServicio.ListadoMarca();
         break;
 
-      case 'Estilo':
+      case 'Medida':
         servicio = this.InventarioServicio.ListadoEstilo();
         break;
 
-      case 'Talla':
+      case 'Ubicacion':
         servicio = this.InventarioServicio.ListadoTalla();
         break;
 
@@ -537,6 +537,18 @@ export class InventarioGestionComponent {
 
     this.NombreNuevoCatalogo = valor;
   }
+  FormatearTextoLibre(event: any) {
+    let valor = event.target.value;
+
+    valor = valor.replace(/\s+/g, ' ').trim();
+
+    valor = valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    valor = valor.toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase());
+
+    event.target.value = valor;
+    this.NombreNuevoCatalogo = valor;
+  }
   RecargarCatalogoPrincipal() {
 
     this.CargarCatalogo('Marcas', this.InventarioServicio.ListadoMarca());
@@ -559,12 +571,12 @@ export class InventarioGestionComponent {
         servicio = this.InventarioServicio.ObtenerMarcaPorCodigo(item.CodigoMarca);
         break;
 
-      case 'Estilo':
+      case 'Medida':
         this.CodigoCatalogoEditando = item.CodigoEstilo;
         servicio = this.InventarioServicio.ObtenerEstiloPorCodigo(item.CodigoEstilo);
         break;
 
-      case 'Talla':
+      case 'Ubicacion':
         this.CodigoCatalogoEditando = item.CodigoTalla;
         servicio = this.InventarioServicio.ObtenerTallaPorCodigo(item.CodigoTalla);
         break;
@@ -589,10 +601,10 @@ export class InventarioGestionComponent {
         if (this.PanelCatalogoActivo === 'Marca')
           this.NombreNuevoCatalogo = data.NombreMarca;
 
-        if (this.PanelCatalogoActivo === 'Estilo')
+        if (this.PanelCatalogoActivo === 'Medida')
           this.NombreNuevoCatalogo = data.NombreEstilo;
 
-        if (this.PanelCatalogoActivo === 'Talla')
+        if (this.PanelCatalogoActivo === 'Ubicacion')
           this.NombreNuevoCatalogo = data.NombreTalla;
 
         if (this.PanelCatalogoActivo === 'Color')
@@ -654,13 +666,13 @@ export class InventarioGestionComponent {
         });
         break;
 
-      case 'Estilo':
+      case 'Medida':
         servicio = this.InventarioServicio.CrearEstilo({
           NombreEstilo: this.NombreNuevoCatalogo
         });
         break;
 
-      case 'Talla':
+      case 'Ubicacion':
         servicio = this.InventarioServicio.CrearTalla({
           NombreTalla: this.NombreNuevoCatalogo
         });
@@ -744,14 +756,14 @@ export class InventarioGestionComponent {
         });
         break;
 
-      case 'Estilo':
+      case 'Medida':
         servicio = this.InventarioServicio.ActualizarEstilo({
           CodigoEstilo: this.CodigoCatalogoEditando,
           NombreEstilo: this.NombreNuevoCatalogo
         });
         break;
 
-      case 'Talla':
+      case 'Ubicacion':
         servicio = this.InventarioServicio.ActualizarTalla({
           CodigoTalla: this.CodigoCatalogoEditando,
           NombreTalla: this.NombreNuevoCatalogo
@@ -864,7 +876,7 @@ export class InventarioGestionComponent {
     let valor = event.target.value;
     valor = valor.replace(/[^0-9.,]/g, '');
     valor = valor.replace(',', '.');
-    this.Inventario.PrecioCosto = valor;  
+    this.Inventario.PrecioCosto = valor;
   }
 
   NormalizarStockInput(event: any) {
