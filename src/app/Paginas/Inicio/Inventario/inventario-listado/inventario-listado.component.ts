@@ -138,25 +138,56 @@ export class InventarioListadoComponent implements OnInit {
   }
 
   IniciarArrastre(event: any, index: number) {
-    if (this.MostrandoEliminados) return; // no permitir eliminar en eliminados
-    event.preventDefault();
-    const startX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
+    if (this.MostrandoEliminados) return;
+
+    const esToque = event.type.startsWith('touch');
+    const inicioX = esToque ? event.touches[0].clientX : event.clientX;
+    const inicioY = esToque ? event.touches[0].clientY : event.clientY;
     const content = event.currentTarget;
+    let arrastreActivo = false; 
 
     const mover = (moveEvent: any) => {
-      const clientX = moveEvent.type.startsWith('touch') ? moveEvent.touches[0].clientX : moveEvent.clientX;
-      let dx = clientX - startX;
-      if (dx < 0) dx = 0;
-      if (dx > 80) dx = 80;
-      content.style.transform = `translateX(${dx}px)`;
+      const clientX = esToque ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const clientY = esToque ? moveEvent.touches[0].clientY : moveEvent.clientY;
+
+      const dx = clientX - inicioX;
+      const dy = clientY - inicioY;
+
+  
+      if (!arrastreActivo && Math.abs(dy) > Math.abs(dx)) {
+        window.removeEventListener('mousemove', mover);
+        window.removeEventListener('mouseup', soltar);
+        window.removeEventListener('touchmove', mover);
+        window.removeEventListener('touchend', soltar);
+        return;
+      }
+
+      if (!arrastreActivo && Math.abs(dx) > 10) { 
+        arrastreActivo = true;
+        moveEvent.preventDefault(); 
+      }
+
+      if (arrastreActivo) {
+        let desplazamiento = dx;
+        if (desplazamiento < 0) desplazamiento = 0;
+        if (desplazamiento > 80) desplazamiento = 80;
+        content.style.transform = `translateX(${desplazamiento}px)`;
+      }
     };
 
     const soltar = () => {
+      window.removeEventListener('mousemove', mover);
+      window.removeEventListener('mouseup', soltar);
+      window.removeEventListener('touchmove', mover);
+      window.removeEventListener('touchend', soltar);
+
+      if (!arrastreActivo) return; 
+
       const transformX = parseInt(content.style.transform.replace('translateX(', '').replace('px)', '')) || 0;
       content.style.transform = `translateX(0)`;
+
       if (transformX > 60) {
         const producto = this.InventarioFiltrado[index].Producto;
-        // USAR ALERTA DE CONFIRMACIÓN
         this.alertaServicio.Confirmacion(
           'Confirmar eliminación',
           `¿Desea eliminar el producto "${producto}"?`,
@@ -168,11 +199,6 @@ export class InventarioListadoComponent implements OnInit {
           }
         });
       }
-
-      window.removeEventListener('mousemove', mover);
-      window.removeEventListener('mouseup', soltar);
-      window.removeEventListener('touchmove', mover);
-      window.removeEventListener('touchend', soltar);
     };
 
     window.addEventListener('mousemove', mover);
