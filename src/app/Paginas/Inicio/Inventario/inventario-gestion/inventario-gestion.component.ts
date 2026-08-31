@@ -80,7 +80,6 @@ export class InventarioGestionComponent {
       .subscribe({
 
         next: (respuesta) => {
-
           const data = respuesta.data;
 
           // PRODUCTO
