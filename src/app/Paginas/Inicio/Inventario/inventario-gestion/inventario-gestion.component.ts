@@ -101,7 +101,7 @@ export class InventarioGestionComponent {
           // ESTILO
           this.Inventario.Diseño = data.CodigoEstilo || 0;
           this.Inventario.EstiloNombreCodigo = data.CodigoEstilo || 0;
-          this.Filtros['Estilo'] = data.Diseno || '';
+          this.Filtros['Medida'] = data.Diseno || '';
 
           // CODIGO BARRA
           this.Inventario.CodigoBarra = data.CodigoBarra || '';
@@ -109,7 +109,7 @@ export class InventarioGestionComponent {
           // TALLA
           this.Inventario.Talla = data.CodigoTalla || 0;
           this.Inventario.TallaNombreCodigo = data.CodigoTalla || 0;
-          this.Filtros['Talla'] = data.Talla || '';
+          this.Filtros['Ubicacion'] = data.Talla || '';
 
           // COLOR
           this.Inventario.Color = data.CodigoColor || 0;
@@ -194,6 +194,9 @@ export class InventarioGestionComponent {
     item: any
   ) {
 
+    const tipoReal = tipo === 'Medida' ? 'Estilo' :
+      tipo === 'Ubicacion' ? 'Talla' : tipo;
+
     const mapa: any = {
       TipoProducto: ['CodigoTipoProducto', 'NombreTipoProducto'],
       Marca: ['CodigoMarca', 'NombreMarca'],
@@ -202,9 +205,13 @@ export class InventarioGestionComponent {
       Color: ['CodigoColor', 'NombreColor']
     };
 
-    const [codigo, nombre] = mapa[tipo];
+    const [codigo, nombre] = mapa[tipoReal];
 
-    const campoInventario = tipo === 'Medida' ? 'Diseño' : tipo;
+    const campoInventario = tipo === 'Medida' ? 'Diseño' : tipoReal;
+
+    // const [codigo, nombre] = mapa[tipo];
+
+    // const campoInventario = tipo === 'Medida' ? 'Diseño' : tipo;
 
     this.Inventario[campoInventario] = Number(item[codigo] || 0);
 
@@ -237,7 +244,7 @@ export class InventarioGestionComponent {
       CodigoMarca: this.Inventario.Marca || 0,
       CodigoEstilo: this.Inventario.Diseño || 0,
       CodigoTalla: this.Inventario.Talla || 0,
-      CodigoColor: this.Inventario.Color || 0,
+      CodigoColor: null,
 
       CodigoBarra: this.Inventario.CodigoBarra,
       Precio: this.Inventario.Precio,
@@ -275,10 +282,47 @@ export class InventarioGestionComponent {
     }
 
     if (!Datos.CodigoEstilo) {
-      this.AlertaServicio.MostrarAlerta('Debe seleccionar Estilo.');
+      this.AlertaServicio.MostrarAlerta('Debe seleccionar Medida.');
       this.Procesando = false;
       return;
     }
+    if (!Datos.CodigoTalla) {
+      this.AlertaServicio.MostrarAlerta('Debe seleccionar Ubicación.');
+      this.Procesando = false;
+      return;
+    }
+
+    if (!Datos.CodigoBarra || !Datos.CodigoBarra.trim()) {
+      this.AlertaServicio.MostrarAlerta('El Código de Barra es obligatorio.');
+      this.Procesando = false;
+      return;
+    }
+
+    if (!Datos.Precio || Number(Datos.Precio) <= 0) {
+      this.AlertaServicio.MostrarAlerta('El Precio de Venta es obligatorio y debe ser mayor a 0.');
+      this.Procesando = false;
+      return;
+    }
+
+    if (!Datos.PrecioCosto || Number(Datos.PrecioCosto) <= 0) {
+      this.AlertaServicio.MostrarAlerta('El Precio de Costo es obligatorio y debe ser mayor a 0.');
+      this.Procesando = false;
+      return;
+    }
+
+    // ✅ VALIDACIÓN CORREGIDA
+    const StockNum = Number(Datos.Stock);
+    if (StockNum < 0) {
+      this.AlertaServicio.MostrarAlerta('El Stock no puede ser negativo.');
+      this.Procesando = false;
+      return;
+    }
+    if (StockNum === 0) {
+      this.AlertaServicio.MostrarAlerta('El Stock es obligatorio y debe ser mayor a 0.');
+      this.Procesando = false;
+      return;
+    }
+
 
     // EDITAR
     if (this.Inventario.CodigoInventario) {
