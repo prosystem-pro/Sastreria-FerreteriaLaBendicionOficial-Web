@@ -566,24 +566,24 @@ export class PedidoGestionComponent {
 
 
 
-      const tipoFisico = this.TiposProducto.find(
-        tp => tp.NombreTipoProducto?.trim().toUpperCase() === 'FISICO'
-      );
+        const tipoFisico = this.TiposProducto.find(
+          tp => tp.NombreTipoProducto?.trim().toUpperCase() === 'FISICO'
+        );
 
-      if (tipoFisico) {
-        this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
-        this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
-        this.MostrarListas['TipoProducto'] = false;
+        if (tipoFisico) {
+          this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
+          this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
+          this.MostrarListas['TipoProducto'] = false;
 
-        this.HistorialPedidoServicio
-          .ListadoProducto(tipoFisico.CodigoTipoProducto)
-          .subscribe((res: any) => {
-            this.Productos = res.data;
-            this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
-            this.ProductoTemp.NombreTipoProducto = tipoFisico.NombreTipoProducto;
-            this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
-          });
-      }
+          this.HistorialPedidoServicio
+            .ListadoProducto(tipoFisico.CodigoTipoProducto)
+            .subscribe((res: any) => {
+              this.Productos = res.data;
+              this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
+              this.ProductoTemp.NombreTipoProducto = tipoFisico.NombreTipoProducto;
+              this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
+            });
+        }
 
 
         if (this.TiposProducto?.length === 1) {
@@ -1105,6 +1105,23 @@ export class PedidoGestionComponent {
     this.Filtros['TipoProducto'] = '';
     this.Filtros['TipoTela'] = '';
     this.Filtros['NombreTela'] = '';
+
+    // ✅ ==== AGREGA ESTO: VOLVER A SELECCIONAR FISICO ====
+    const tipoFisico = this.TiposProducto.find(
+      tp => tp.NombreTipoProducto?.trim().toUpperCase() === 'FISICO'
+    );
+    if (tipoFisico) {
+      this.ProductoTemp.CodigoTipoProducto = tipoFisico.CodigoTipoProducto;
+      this.ProductoTemp.NombreTipoProducto = tipoFisico.NombreTipoProducto;
+      this.Filtros['TipoProducto'] = tipoFisico.NombreTipoProducto;
+
+      // 🔹 Cargar la lista de productos de FISICO nuevamente
+      this.HistorialPedidoServicio
+        .ListadoProducto(tipoFisico.CodigoTipoProducto)
+        .subscribe((res: any) => {
+          this.Productos = res.data;
+        });
+    }
   }
 
   // ==============================
