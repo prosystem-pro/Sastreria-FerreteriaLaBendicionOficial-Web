@@ -292,11 +292,7 @@ export class InventarioGestionComponent {
       return;
     }
 
-    if (!Datos.CodigoBarra || !Datos.CodigoBarra.trim()) {
-      this.AlertaServicio.MostrarAlerta('El Código de Barra es obligatorio.');
-      this.Procesando = false;
-      return;
-    }
+
 
     if (!Datos.Precio || Number(Datos.Precio) <= 0) {
       this.AlertaServicio.MostrarAlerta('El Precio de Venta es obligatorio y debe ser mayor a 0.');
@@ -916,12 +912,27 @@ export class InventarioGestionComponent {
     this.Inventario.Precio = valor;
     event.target.value = valor;
   }
-  NormalizarPrecioCostoInput(event: any) {
-    let valor = event.target.value;
-    valor = valor.replace(/[^0-9.,]/g, '');
-    valor = valor.replace(',', '.');
-    this.Inventario.PrecioCosto = valor;
+NormalizarPrecioCostoInput(event: any) {
+  let valor = event.target.value;
+  
+  // Permitir solo números, coma y punto
+  valor = valor.replace(/[^0-9.,]/g, '');
+  
+  // Reemplazar coma por punto
+  valor = valor.replace(',', '.');
+  
+  // Evitar múltiples puntos y limitar a 2 decimales
+  const partes = valor.split('.');
+  if (partes.length > 1) {
+    valor = partes[0] + '.' + partes[1].slice(0, 2);
+  } else {
+    valor = partes[0];
   }
+
+  this.Inventario.PrecioCosto = valor;
+  event.target.value = valor; // ✅ Reflejar en el input
+}
+
 
   NormalizarStockInput(event: any) {
     let valor = event.target.value;
