@@ -1132,14 +1132,16 @@ export class PedidoGestionComponent {
     const subtotal = this.Pedido.Productos.reduce((acc: number, prod: any) => acc + prod.Subtotal, 0);
     const porcentaje = this.Pedido.Descuento || 0;
     const descuentoBruto = subtotal * (porcentaje / 100);
-    const entero = Math.floor(descuentoBruto);
-    const decimales = descuentoBruto - entero;
-    const descuentoMonto = (decimales * 100 >= 51) ? entero + 1 : entero;
+
+    // ✅ ANTES redondeaba → AHORA usa el valor EXACTO directamente
+    const descuentoMonto = descuentoBruto; // ❌ SIN Math.floor, SIN 51 centavos
+
     const total = subtotal - descuentoMonto;
     this.Pedido.Subtotal = subtotal;
-    this.Pedido.Total = total;
+    this.Pedido.Total = total; // ← Valor real con decimales
     this.GuardarBorrador();
   }
+
 
   // ==============================
   // PEDIDO
@@ -1474,156 +1476,209 @@ export class PedidoGestionComponent {
       this.ConfirmarPedido();
     }
   }
-ConfirmarPedido() {
-  // 🔴 CALCULAMOS EL TOTAL REDONDEADO UNA SOLA VEZ — TODAS LAS VALIDACIONES LO USAN
-  const descuentoAjustado = this.aproximarSegunRegla(
-    (this.Pedido.Subtotal || 0) * ((this.Pedido.Descuento || 0) / 100)
-  );
-  const totalFinal = this.aproximarSegunRegla(
-    (this.Pedido.Subtotal || 0) - descuentoAjustado
-  );
-
-  // 🔴 VALIDACIÓN DE CANCELADO — CREAR y EDITAR
-  const estadoSeleccionado = this.EstadoPedido?.find(
-    e => e.CodigoEstadoPedido === this.Pedido.CodigoEstadoPedido
-  );
-  const nombreEstado = estadoSeleccionado?.NombreEstadoPedido?.toUpperCase() || '';
-
-  if (nombreEstado.includes('CANCELADO')) {
-    if (this.Modo === 'CREAR') {
-      // 🆕 Compara con el TOTAL REDONDEADO
-      const montoPago = Number(this.MontoPago) || 0;
-      if (montoPago < totalFinal) {
-        this.AlertaServicio.MostrarAlerta(
-          `No se puede cancelar. Debe pagar Q ${totalFinal.toFixed(2)} — use CRÉDITO.`
-        );
-        this.Procesando = false;
-        return;
-      }
-    } else {
-      // ✏️ EDITAR: revisamos SaldoPendiente
-      const saldo = this.Pedido.SaldoPendiente ?? 0;
-      if (saldo > 0) {
-        this.AlertaServicio.MostrarAlerta(
-          `No se puede cancelar. Saldo pendiente: Q ${saldo.toFixed(2)}`
-        );
-        this.Procesando = false;
-        return;
-      }
-    }
-  }
-
-  // ================= VALIDACIONES DE MONTO =================
-  this.MontoPago = Number(this.MontoPago);
-  if (this.Procesando) return;
-  this.Procesando = true;
-  const payload: any = { ...this.Pedido };
-  let codigoPedidoCreado: number | null = null;
-
-  if (this.Modo === 'CREAR') {
-    if (this.Rol === 'EMPRESA_OFICIAL') {
-      if (!this.FormaPagoSeleccionada) {
-        this.AlertaServicio.MostrarAlerta('La forma de pago es obligatoria');
-        this.Procesando = false;
-        return;
-      }
-      if (this.MontoPago === null || this.MontoPago === undefined) {
-        this.AlertaServicio.MostrarAlerta('El monto es obligatorio');
-        this.Procesando = false;
-        return;
-      }
-      this.MontoPago = Number(this.MontoPago);
-      if (isNaN(this.MontoPago)) {
-        this.AlertaServicio.MostrarAlerta('El monto debe ser un número válido');
-        this.Procesando = false;
-        return;
-      }
-
-      // ✅ COMPARAMOS CON EL TOTAL REDONDEADO
-      if (this.MontoPago > totalFinal) {
-        this.AlertaServicio.MostrarAlerta(
-          `El monto no puede ser mayor al total del pedido (Q ${totalFinal.toFixed(2)})`
-        );
-        this.Procesando = false;
-        return;
-      }
-    }
-
-    payload.FormaPago = this.FormaPagoSeleccionada || 1;
-    payload.MontoPago = (this.MontoPago && this.MontoPago > 0) ? this.MontoPago : 0;
-    const formaSeleccionada = this.FormaPago.find(
-      fp => fp.CodigoFormaPago === this.FormaPagoSeleccionada
+  ConfirmarPedido() {
+    // 🔴 VALIDACIÓN ANTES DE TODO — CREAR Y EDITAR POR IGUAL
+    const estadoSeleccionado = this.EstadoPedido?.find(
+      e => e.CodigoEstadoPedido === this.Pedido.CodigoEstadoPedido
     );
-    const nombre = formaSeleccionada?.NombreFormaPago?.toUpperCase();
-    const requiereReferencia = nombre === 'TARJETA' || nombre === 'TRANSFERENCIA';
-    if (requiereReferencia && !this.ReferenciaPago?.trim()) {
-      this.AlertaServicio.MostrarAlerta('La referencia es obligatoria');
-      this.Procesando = false;
-      return;
-    }
-    if (requiereReferencia) {
-      payload.Referencia = this.ReferenciaPago;
-    }
-  } else {
-    payload.CodigoPedido = this.Codigo;
-  }
+    const nombreEstado = estadoSeleccionado?.NombreEstadoPedido?.toUpperCase() || '';
 
-  // ✅ MISMO CÁLCULO PARA GUARDAR — COINCIDE SIEMPRE
-  const valorDescuento = (this.Pedido.Subtotal || 0) * ((this.Pedido.Descuento || 0) / 100);
-  const descuentoFinal = this.aproximarSegunRegla(valorDescuento);
-  const totalAjustado = this.aproximarSegunRegla((this.Pedido.Subtotal || 0) - descuentoFinal);
-  payload.Total = totalAjustado;
+    if (nombreEstado.includes('CANCELADO')) {
+      const total = this.Pedido.Total ?? 0;
 
-  const servicio = this.Modo === 'CREAR'
-    ? this.HistorialPedidoServicio.CrearPedido(payload)
-    : this.HistorialPedidoServicio.ActualizarPedido(payload);
-
-  servicio.subscribe({
-    next: (resp: any) => {
       if (this.Modo === 'CREAR') {
-        codigoPedidoCreado = resp?.data?.CodigoPedido;
-        this.BorradorPedidoService.LimpiarPedido();
-        this.AlertaServicio.MostrarExito('Pedido creado correctamente');
-      } else {
-        this.AlertaServicio.MostrarExito('Pedido actualizado correctamente');
-      }
-      this.MostrarModalConfirmacion = false;
-
-      if (this.Modo === 'CREAR' && codigoPedidoCreado) {
-        if (this.Rol === 'EMPRESA_OFICIAL') {
-          this.IrAVentaImpresion(codigoPedidoCreado);
+        // 🆕 CREAR: comparamos Total vs MontoPago (YA LO ESCRIBIÓ EN EL MODAL)
+        const montoPago = Number(this.MontoPago) || 0;
+        if (montoPago < total) {
+          this.AlertaServicio.MostrarAlerta(
+            `No se puede cancelar. Debe pagar Q ${total.toFixed(2)} — use CRÉDITO.`
+          );
+          this.Procesando = false;
           return;
         }
-        if (this.VerOtros) {
-          this.Router.navigate(['/pedido-listado'], { queryParams: { verOtros: true } });
-        } else {
-          this.Router.navigate(['/pedido-listado']);
+      } else {
+        // ✏️ EDITAR: revisamos SaldoPendiente
+        const saldo = this.Pedido.SaldoPendiente ?? 0;
+        if (saldo > 0) {
+          this.AlertaServicio.MostrarAlerta(
+            `No se puede cancelar. Saldo pendiente: Q ${saldo.toFixed(2)}`
+          );
+          this.Procesando = false;
+          return;
         }
+      }
+    }
+    // ================= VALIDACIONES =================
+
+    this.MontoPago = Number(this.MontoPago);
+
+    if (this.Procesando) return;
+    this.Procesando = true;
+
+    const payload: any = { ...this.Pedido };
+
+    let codigoPedidoCreado: number | null = null;
+
+    if (this.Modo === 'CREAR') {
+
+      if (this.Rol === 'EMPRESA_OFICIAL') {
+
+        if (!this.FormaPagoSeleccionada) {
+          this.AlertaServicio.MostrarAlerta('La forma de pago es obligatoria');
+          this.Procesando = false;
+          return;
+        }
+
+        if (this.MontoPago === null || this.MontoPago === undefined) {
+          this.AlertaServicio.MostrarAlerta('El monto es obligatorio');
+          this.Procesando = false;
+          return;
+        }
+
+        this.MontoPago = Number(this.MontoPago);
+
+        if (isNaN(this.MontoPago)) {
+          this.AlertaServicio.MostrarAlerta('El monto debe ser un número válido');
+          this.Procesando = false;
+          return;
+        }
+
+        // if (this.MontoPago <= 0) {
+        //   this.AlertaServicio.MostrarAlerta('El monto debe ser mayor a 0');
+        //   this.Procesando = false;
+        //   return;
+        // }
+
+        if (this.MontoPago > this.Pedido.Total) {
+          this.AlertaServicio.MostrarAlerta('El monto no puede ser mayor al total del pedido');
+          this.Procesando = false;
+          return;
+        }
+
+      }
+
+      payload.FormaPago = this.FormaPagoSeleccionada || 1;
+      // payload.MontoPago = this.MontoPago || this.Pedido.Total;
+      payload.MontoPago = (this.MontoPago && this.MontoPago > 0) ? this.MontoPago : 0;
+
+      const formaSeleccionada = this.FormaPago.find(
+        fp => fp.CodigoFormaPago === this.FormaPagoSeleccionada
+      );
+
+      const nombre = formaSeleccionada?.NombreFormaPago?.toUpperCase();
+
+      const requiereReferencia =
+        nombre === 'TARJETA' || nombre === 'TRANSFERENCIA';
+
+      if (requiereReferencia && !this.ReferenciaPago?.trim()) {
+        this.AlertaServicio.MostrarAlerta('La referencia es obligatoria');
+        this.Procesando = false;
         return;
       }
 
-      if (this.VerOtros) {
-        this.Router.navigate(['/pedido-listado'], { queryParams: { verOtros: true } });
-      } else {
-        this.Router.navigate(['/pedido-listado']);
+      if (requiereReferencia) {
+        payload.Referencia = this.ReferenciaPago;
       }
-    },
-    error: (err) => {
-      const tipo = err?.error?.tipo;
-      const mensaje = err?.error?.error?.message || err?.error?.message || 'Ocurrió un error inesperado';
-      if (tipo === 'Alerta') {
-        this.AlertaServicio.MostrarAlerta(mensaje);
-      } else if (tipo === 'Error') {
-        this.AlertaServicio.MostrarError(err);
-      } else {
-        this.AlertaServicio.MostrarError(err);
-      }
-    }
-  }).add(() => {
-    this.Procesando = false;
-  });
-}
 
+    } else {
+      payload.CodigoPedido = this.Codigo;
+    }
+
+
+    const valorDescuento = (this.Pedido.Subtotal || 0) * ((this.Pedido.Descuento || 0) / 100);
+    payload.Total = (this.Pedido.Subtotal || 0) - valorDescuento;
+
+
+    const servicio = this.Modo === 'CREAR'
+      ? this.HistorialPedidoServicio.CrearPedido(payload)
+      : this.HistorialPedidoServicio.ActualizarPedido(payload);
+
+    servicio.subscribe({
+
+      next: (resp: any) => {
+
+
+        if (this.Modo === 'CREAR') {
+
+          codigoPedidoCreado = resp?.data?.CodigoPedido;
+
+          this.BorradorPedidoService.LimpiarPedido();
+          this.AlertaServicio.MostrarExito('Pedido creado correctamente');
+
+        } else {
+          this.AlertaServicio.MostrarExito('Pedido actualizado correctamente');
+        }
+
+        this.MostrarModalConfirmacion = false;
+
+        //  SOLO SI ES CREAR → IMPRIMIR
+        if (this.Modo === 'CREAR' && codigoPedidoCreado) {
+
+          //  EMPRESA_OFICIAL → va a impresión
+          if (this.Rol === 'EMPRESA_OFICIAL') {
+            this.IrAVentaImpresion(codigoPedidoCreado);
+            return;
+          }
+
+          //  EMPRESA_ASOCIADA → regresa al listado
+          if (this.VerOtros) {
+
+            this.Router.navigate(
+              ['/pedido-listado'],
+              { queryParams: { verOtros: true } }
+            );
+
+          } else {
+
+            this.Router.navigate(['/pedido-listado']);
+
+          }
+
+          return;
+        }
+
+        // ================= EDITAR =================
+        if (this.VerOtros) {
+
+          this.Router.navigate(
+            ['/pedido-listado'],
+            { queryParams: { verOtros: true } }
+          );
+
+        } else {
+
+          this.Router.navigate(['/pedido-listado']);
+
+        }
+
+      },
+
+      error: (err) => {
+
+        const tipo = err?.error?.tipo;
+
+        const mensaje =
+          err?.error?.error?.message ||
+          err?.error?.message ||
+          'Ocurrió un error inesperado';
+
+        if (tipo === 'Alerta') {
+          this.AlertaServicio.MostrarAlerta(mensaje);
+        }
+        else if (tipo === 'Error') {
+          this.AlertaServicio.MostrarError(err);
+        }
+        else {
+          this.AlertaServicio.MostrarError(err);
+        }
+
+      }
+
+    }).add(() => {
+      this.Procesando = false;
+    });
+
+  }
   onFormaPagoChange() {
     const forma = this.FormaPago.find(fp => fp.CodigoFormaPago === this.FormaPagoSeleccionada);
     // Compara el nombre en mayúsculas para que no falle por "Tarjeta" vs "TARJETA"

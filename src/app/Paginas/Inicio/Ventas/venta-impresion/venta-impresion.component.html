@@ -28,8 +28,7 @@
 
       <!-- LOGO -->
       <div class="text-center mb-2">
-        <img src="LogoFactura.jpeg" alt="logo" class="img-fluid"
-          style="width:75%; max-width:300px; height:auto;">
+        <img src="LogoFactura.jpeg" alt="logo" class="img-fluid" style="width:75%; max-width:300px; height:auto;">
       </div>
 
       <!-- EMPRESA -->
@@ -133,12 +132,10 @@
       <div class="text-end mb-0">
         Descuento ({{ datosImpresion.totales.descuento }}%):
         Q {{
-        calcularDescuentoConRegla(
-        datosImpresion.totales.subtotal,
-        datosImpresion.totales.descuento
-        )
+        (datosImpresion.totales.subtotal * datosImpresion.totales.descuento / 100).toFixed(2)
         }}
       </div>
+
 
 
       <div class="text-end fw-bold fs-5 mb-0">

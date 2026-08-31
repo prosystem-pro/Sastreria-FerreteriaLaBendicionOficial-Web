@@ -324,7 +324,7 @@
                                     </div>
 
                                     <div class="fw-bold fs-4 text-success">
-                                        {{ Math.ceil(Pedido.Total || 0) | currency:'GTQ':'symbol':'1.0-0' }}
+                                        {{ Pedido.Total || 0 | currency:'GTQ':'symbol':'1.2-2' }}
                                     </div>
 
                                 </div>
@@ -440,7 +440,7 @@
                             <div class="col-12 mb-2">
                                 <label class="form-label small mb-1">Tipo Producto</label>
 
-                                <div class="mb-2 position-relative" >
+                                <div class="mb-2 position-relative">
 
                                     <div class="input-group input-group-sm"
                                         [style.cursor]="VerOtros ? 'not-allowed' : 'pointer'"
@@ -747,17 +747,19 @@
                 </div>
 
                 <!-- RESUMEN -->
+                <!-- RESUMEN -->
                 <div class="text-end mt-2">
                     <p class="mb-1" *ngIf="EsOficial() || EsSuperAdmin()">
                         Subtotal: Q{{ Pedido.Subtotal | number:'1.2-2' }}
                     </p>
                     <p class="mb-1" *ngIf="EsOficial() || EsSuperAdmin()">
-                        Descuento: -Q{{ getDescuentoAprox(Pedido.Subtotal, Pedido.Descuento) | number:'1.0-0' }}
+                        Descuento: -Q{{ Pedido.Subtotal * (Pedido.Descuento / 100) | number:'1.2-2' }}
                     </p>
                     <p class="fw-bold">
-                        Total: Q{{ getTotalCalculado(Pedido.Subtotal, Pedido.Descuento) | number:'1.0-0' }}
+                        Total: Q{{ (Pedido.Subtotal - (Pedido.Subtotal * (Pedido.Descuento / 100))) | number:'1.2-2' }}
                     </p>
                 </div>
+
             </div>
         </div>
     </div>
