@@ -214,7 +214,7 @@
                         <div class="col-12 col-md-6 mb-3">
                             <label class="form-label d-flex align-items-center gap-2">
                                 <i class="bi bi-calendar-event text-info"></i>
-                                Fecha Entrega
+                                Vencimiento
                             </label>
 
                             <div class="position-relative">
@@ -440,7 +440,7 @@
                             <div class="col-12 mb-2">
                                 <label class="form-label small mb-1">Tipo Producto</label>
 
-                                <div class="mb-2 position-relative" style="max-width: 300px;">
+                                <div class="mb-2 position-relative" >
 
                                     <div class="input-group input-group-sm"
                                         [style.cursor]="VerOtros ? 'not-allowed' : 'pointer'"
@@ -525,7 +525,7 @@
                             </div>
 
                             <!-- TIPO TELA -->
-                            <div class="col-6 mb-2">
+                            <!-- <div class="col-6 mb-2">
                                 <label class="form-label small mb-1">Tipo Tela</label>
 
                                 <div class="mb-2 position-relative" style="max-width: 300px;">
@@ -563,14 +563,13 @@
                                     </ul>
 
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- NOMBRE TELA -->
-                            <div class="col-4 mb-2">
+                            <!-- <div class="col-4 mb-2">
                                 <label class="form-label small mb-1">Nombre Tela</label>
 
                                 <div class="mb-2 position-relative" style="max-width: 300px;">
-                                    <!-- INPUT SIMPLE SOLO EMPRESA_ASOCIADA -->
                                     <input *ngIf="Rol === 'EMPRESA_ASOCIADA'" type="text"
                                         class="form-control form-control-sm" placeholder="Nombre tela"
                                         [(ngModel)]="ProductoTemp.NombreTela" [ngModelOptions]="{standalone: true}"
@@ -579,13 +578,11 @@
                                         [style.cursor]="(VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO') ? 'not-allowed' : 'pointer'"
                                         (click)="!(VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO') && AlternarListaBusqueda('NombreTela', $event)">
 
-                                        <!-- INPUT -->
                                         <input type="text" class="form-control form-control-sm"
                                             placeholder="Buscar nombre de tela" [(ngModel)]="Filtros['NombreTela']"
                                             [ngModelOptions]="{standalone: true}"
                                             [disabled]="VerOtros || !ProductoTemp.CodigoTipoTela || ProductoTemp.NombreTipoProducto === 'FISICO'">
 
-                                        <!-- FLECHA -->
                                         <span class="input-group-text"
                                             *ngIf="!(VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO')"
                                             style="background: white; border-left: 0;">
@@ -594,7 +591,6 @@
 
                                     </div>
 
-                                    <!-- LISTA -->
                                     <ul class="list-group position-absolute w-100 shadow-sm" *ngIf="!(VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO')
                     && MostrarListas['NombreTela']
                     && Filtrados('NombreTela', Telas, 'NombreTela').length > 0"
@@ -610,26 +606,26 @@
                                     </ul>
 
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- CÓDIGO -->
-                            <div class="col-4 mb-2">
+                            <!-- <div class="col-4 mb-2">
                                 <label class="form-label small mb-1">Código</label>
                                 <input type="text" class="form-control form-control-sm" placeholder="Ingrese código"
                                     [(ngModel)]="ProductoTemp.Codigo" [ngModelOptions]="{standalone: true}"
                                     [disabled]="VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO'">
-                            </div>
+                            </div> -->
 
                             <!-- COLOR -->
-                            <div class="col-4 mb-2">
+                            <!-- <div class="col-4 mb-2">
                                 <label class="form-label small mb-1">Color</label>
                                 <input type="text" class="form-control form-control-sm" placeholder="Ingrese color"
                                     [(ngModel)]="ProductoTemp.Color" [ngModelOptions]="{standalone: true}"
                                     [disabled]="VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO'">
-                            </div>
+                            </div> -->
 
                             <!-- CANTIDAD -->
-                            <div class="col-4 mb-2">
+                            <div class="col-6 mb-2">
                                 <label class="form-label small mb-1">Cantidad</label>
                                 <input type="number" class="form-control form-control-sm" placeholder="Ingrese cantidad"
                                     [(ngModel)]="ProductoTemp.Cantidad" [ngModelOptions]="{standalone: true}"
@@ -637,19 +633,19 @@
                             </div>
 
                             <!-- PRECIO -->
-                            <div class="col-4 mb-2" *ngIf="(EsOficial() || EsSuperAdmin()) && !VerOtros">
+                            <div class="col-12 mb-2" *ngIf="(EsOficial() || EsSuperAdmin()) && !VerOtros">
                                 <label class="form-label small mb-1">Precio</label>
                                 <input type="number" class="form-control form-control-sm" placeholder="Ingrese precio"
                                     [(ngModel)]="ProductoTemp.Precio" [ngModelOptions]="{standalone: true}" disabled>
                             </div>
 
                             <!-- REFERENCIA -->
-                            <div class="col-4 mb-2">
+                            <!-- <div class="col-4 mb-2">
                                 <label class="form-label small mb-1">Referencia</label>
                                 <input type="text" class="form-control form-control-sm" placeholder="Referencia"
                                     [(ngModel)]="ProductoTemp.Referencia" [ngModelOptions]="{standalone:true}"
                                     [disabled]="VerOtros || ProductoTemp.NombreTipoProducto === 'FISICO'">
-                            </div>
+                            </div> -->
 
                         </div>
 
